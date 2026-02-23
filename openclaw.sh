@@ -72,6 +72,29 @@ generate_token() {
 	fi
 }
 
+# Read interactive user input from terminal when script stdin is piped.
+# Usage: read_user_input VAR_NAME [secret]
+read_user_input() {
+  local var_name="$1"
+  local secret="${2:-}"
+
+  if [ -r /dev/tty ]; then
+    if [ "$secret" = "secret" ]; then
+      IFS= read -rs "$var_name" </dev/tty
+      echo >/dev/tty
+    else
+      IFS= read -r "$var_name" </dev/tty
+    fi
+  else
+    if [ "$secret" = "secret" ]; then
+      IFS= read -rs "$var_name"
+      echo
+    else
+      IFS= read -r "$var_name"
+    fi
+  fi
+}
+
 # Prompt for a required value (re-asks until non-empty).
 # Usage: prompt_required VAR_NAME "Prompt text" [secret]
 prompt_required() {
@@ -83,11 +106,10 @@ prompt_required() {
   while [ -z "$value" ]; do
     if [ "$secret" = "secret" ]; then
       echo -en "${BOLD}${prompt_text}:${NC} "
-      read -rs value
-      echo
+      read_user_input value secret
     else
       echo -en "${BOLD}${prompt_text}:${NC} "
-      read -r value
+      read_user_input value
     fi
     if [ -z "$value" ]; then
       log_error "This field is required. Please enter a value."
@@ -112,10 +134,9 @@ prompt_optional() {
   fi
 
   if [ "$secret" = "secret" ]; then
-    read -rs value
-    echo
+    read_user_input value secret
   else
-    read -r value
+    read_user_input value
   fi
 
   if [ -z "$value" ] && [ -n "$default_val" ]; then
@@ -130,7 +151,7 @@ prompt_confirm() {
   local value=""
   while true; do
     echo -en "${BOLD}${prompt_text}${NC} ${MUTED}[y/N]${NC}: "
-    read -r value
+    read_user_input value
     case "$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" in
       y|yes) printf -v "$var_name" 'yes'; return 0 ;;
       n|no|"") printf -v "$var_name" 'no'; return 0 ;;
@@ -440,7 +461,7 @@ main() {
 	local RESOURCE_CHOICE="" RESOURCE_NAME=""
 	while true; do
 	echo -en "${BOLD}Choose resource size [1/2/3/4]:${NC} "
-	read -r RESOURCE_CHOICE
+	read_user_input RESOURCE_CHOICE
 	case "$RESOURCE_CHOICE" in
 		1|"") RESOURCE_NAME="cpu-small";  break ;;
 		2) RESOURCE_NAME="cpu-medium"; break ;;
@@ -464,7 +485,7 @@ main() {
 	local PROVIDER_KEY_NAME="" PROVIDER_API_KEY="" DEFAULT_MODEL=""
 	while true; do
 	echo -en "${BOLD}Choose provider [1/2/3/4/5]:${NC} "
-	read -r PROVIDER_CHOICE
+	read_user_input PROVIDER_CHOICE
 	case "$PROVIDER_CHOICE" in
 		1) PROVIDER="openai";    break ;;
 		2) PROVIDER="anthropic"; break ;;
@@ -514,7 +535,7 @@ main() {
 	local CHANNEL_TOKEN="" CHANNEL_ALLOW_FROM=""
 	while true; do
 	echo -en "${BOLD}Choose channel [1/2/3/4]:${NC} "
-	read -r CHANNEL_CHOICE
+	read_user_input CHANNEL_CHOICE
 	case "$CHANNEL_CHOICE" in
 		1) CHANNEL="telegram"; break ;;
 		2) CHANNEL="whatsapp"; break ;;
@@ -576,7 +597,7 @@ main() {
 	local DISABLE_DEVICE_AUTH="true"
 	while true; do
 		echo -en "${BOLD}Disable device auth and skip pairing requests?${NC} ${MUTED}[Y/n]${NC}: "
-		read -r DISABLE_DEVICE_AUTH_CHOICE
+		read_user_input DISABLE_DEVICE_AUTH_CHOICE
 		case "$(printf '%s' "$DISABLE_DEVICE_AUTH_CHOICE" | tr '[:upper:]' '[:lower:]')" in
 			""|y|yes)
 				DISABLE_DEVICE_AUTH="true"
