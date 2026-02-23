@@ -78,21 +78,23 @@ read_user_input() {
   local var_name="$1"
   local secret="${2:-}"
 
-  if [ -r /dev/tty ]; then
+  if [ -r /dev/tty ] && [ -w /dev/tty ]; then
     if [ "$secret" = "secret" ]; then
-      IFS= read -rs "$var_name" </dev/tty
-      echo >/dev/tty
+      IFS= read -rs "$var_name" </dev/tty || printf -v "$var_name" ''
+      echo >/dev/tty || true
     else
-      IFS= read -r "$var_name" </dev/tty
+      IFS= read -r "$var_name" </dev/tty || printf -v "$var_name" ''
     fi
   else
     if [ "$secret" = "secret" ]; then
-      IFS= read -rs "$var_name"
-      echo
+      IFS= read -rs "$var_name" || printf -v "$var_name" ''
+      echo || true
     else
-      IFS= read -r "$var_name"
+      IFS= read -r "$var_name" || printf -v "$var_name" ''
     fi
   fi
+
+  return 0
 }
 
 # Prompt for a required value (re-asks until non-empty).
@@ -432,6 +434,10 @@ main() {
 	echo
 
 	check_deps
+
+	if ! [ -r /dev/tty ] || ! [ -w /dev/tty ]; then
+		die "Interactive setup requires a TTY. Re-run in a terminal (not CI) and avoid redirecting /dev/tty."
+	fi
 
 	# ----- Targon credentials -----------------------------------------------
 	log_section "Targon Account"
