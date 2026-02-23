@@ -131,7 +131,7 @@ prompt_confirm() {
   while true; do
     echo -en "${BOLD}${prompt_text}${NC} ${MUTED}[y/N]${NC}: "
     read -r value
-    case "${value,,}" in
+    case "$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" in
       y|yes) printf -v "$var_name" 'yes'; return 0 ;;
       n|no|"") printf -v "$var_name" 'no'; return 0 ;;
       *) log_error "Please answer y or n." ;;
@@ -577,7 +577,7 @@ main() {
 	while true; do
 		echo -en "${BOLD}Disable device auth and skip pairing requests?${NC} ${MUTED}[Y/n]${NC}: "
 		read -r DISABLE_DEVICE_AUTH_CHOICE
-		case "${DISABLE_DEVICE_AUTH_CHOICE,,}" in
+		case "$(printf '%s' "$DISABLE_DEVICE_AUTH_CHOICE" | tr '[:upper:]' '[:lower:]')" in
 			""|y|yes)
 				DISABLE_DEVICE_AUTH="true"
 				log_warn "Device auth disabled."
