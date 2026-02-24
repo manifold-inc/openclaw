@@ -180,11 +180,11 @@ prompt_confirm() {
   local prompt_text="$2"
   local value=""
   while true; do
-    echo -en "${BOLD}${prompt_text}${NC} ${MUTED}[y/N]${NC}: "
+    echo -en "${BOLD}${prompt_text}${NC} ${MUTED}[Y/n]${NC}: "
     read_user_input value
     case "$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" in
-      y|yes) printf -v "$var_name" 'yes'; return 0 ;;
-      n|no|"") printf -v "$var_name" 'no'; return 0 ;;
+      y|yes|"") printf -v "$var_name" 'yes'; return 0 ;;
+      n|no) printf -v "$var_name" 'no'; return 0 ;;
       *) log_error "Please answer y or n." ;;
     esac
   done
