@@ -6,14 +6,42 @@ set -euo pipefail
 # Usage: curl -fsSL https://targon.com/openclaw.sh | bash
 # ===========================================================
 
-BOLD='\033[1m'
-INFO='\033[38;2;136;146;176m'
-SUCCESS='\033[38;2;0;229;204m'
-WARN='\033[38;2;255;176;32m'
-ERROR='\033[38;2;230;57;70m'
-MUTED='\033[38;2;90;100;128m'
-ACCENT='\033[38;2;255;77;77m'
-NC='\033[0m'
+BOLD=''
+INFO=''
+SUCCESS=''
+WARN=''
+ERROR=''
+MUTED=''
+ACCENT=''
+NC=''
+
+init_colors() {
+	# Respect no-color and non-interactive environments.
+	if [ -n "${NO_COLOR:-}" ] || { [ ! -t 1 ] && [ ! -t 2 ]; } || [ "${TERM:-}" = "dumb" ]; then
+		return 0
+	fi
+
+	BOLD='\033[1m'
+	NC='\033[0m'
+
+	# Apple Terminal has inconsistent support for 24-bit colors on some setups.
+	# Use 256-color palette there; keep truecolor for iTerm/modern terminals.
+	if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
+		INFO='\033[38;5;110m'
+		SUCCESS='\033[38;5;42m'
+		WARN='\033[38;5;214m'
+		ERROR='\033[38;5;203m'
+		MUTED='\033[38;5;245m'
+		ACCENT='\033[38;5;203m'
+	else
+		INFO='\033[38;2;136;146;176m'
+		SUCCESS='\033[38;2;0;229;204m'
+		WARN='\033[38;2;255;176;32m'
+		ERROR='\033[38;2;230;57;70m'
+		MUTED='\033[38;2;90;100;128m'
+		ACCENT='\033[38;2;255;77;77m'
+	fi
+}
 
 print_banner() {
 	echo -e "${ACCENT}"
@@ -427,6 +455,7 @@ print_result() {
 }
 
 main() {
+	init_colors
 	print_banner
 
 	echo -e "${BOLD}Welcome to the OpenClaw installer for Targon.${NC}"
